@@ -1,0 +1,17 @@
+port: 8989
+base_url: "/api/1.0"
+verify_root_dir: "data/verify/"
+pdc_root_dir: "data/{}/runfolders/"
+dsmc_log_dir: "logs/"
+job_timeout: "48h"      # maximum run-time for a job
+job_ttl: "72h"          # maximum time to keep a job in the queue
+job_result_ttl: "-1"    # maximum time to keep job result; -1 never expires
+
+# Whitelisted DSMC warnings.
+#
+# ANS1809W = a session with the TSM server has been disconnected: will retry again
+# ANS2042W = a symblic link to a file on other fs has been uploaded: acls/extended attributes might not be backed up
+# ANS2250W = a TSM core file or crash report was found
+#
+# See full list at e.g. https://www.ibm.com/support/knowledgecenter/en/SSGSG7_7.1.1/com.ibm.itsm.msgs.client.doc/msgs_client_list_intro.html
+whitelisted_warnings: ["ANS1809W", "ANS2042W", "ANS2250W"]
