@@ -1,0 +1,6 @@
+aiohttp==2.3.7
+aiodns==1.1.1
+pyyaml==3.12
+rq==0.10.0
+cchardet==2.1.1
+yarl==0.18.0
