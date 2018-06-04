@@ -25,9 +25,11 @@ async def verify(request):
     host = body["host"]
     archive = body["archive"]
     description = body["description"]
-    
+    path = body.get("path")
+
     src_root = request.app["config"]["pdc_root_dir"].format(host)
-    archive_path = os.path.join(src_root, archive) 
+    # use a supplied path if available, otherwise construct it from the src_root and archive
+    archive_path = path or os.path.join(src_root, archive)
 
     redis_conn = Redis()
     q = Queue(connection=redis_conn)
@@ -38,7 +40,7 @@ async def verify(request):
     # config e.g. setups the queue to keep the job results indefinately, 
     # therefore they we will have to remove them ourselves afterwards. 
     job = q.enqueue_call(verify_archive, 
-                        args=(archive, host, description, request.app["config"]),
+                        args=(archive, archive_path, description, request.app["config"]),
                         timeout=request.app["config"]["job_timeout"],
                         result_ttl=request.app["config"]["job_result_ttl"],
                         ttl=request.app["config"]["job_ttl"])
