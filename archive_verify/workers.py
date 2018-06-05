@@ -90,13 +90,13 @@ def compare_md5sum(archive_dir):
     else: 
         return True
 
-def verify_archive(archive, host, description, config):
+def verify_archive(archive, archive_path, description, config):
     """
     Our main worker function. This will be put into the RQ/Redis queue when the /verify endpoint gets called. 
     Downloads the specified archive from PDC and then verifies the MD5 sums. 
 
     :param archive: The name of the archive we shall download
-    :param host: The host the archive was previsouly uploaded from
+    :param archive_path: The path to the archive on PDC
     :param description: The unique description that was used when uploading the archive to PDC
     :param config: A dict containing the apps configuration
     :returns A JSON with the result that will be kept in the Redis queue
@@ -104,12 +104,10 @@ def verify_archive(archive, host, description, config):
     dest_root = config["verify_root_dir"]
     dsmc_log_dir = config["dsmc_log_dir"]
     whitelist = config["whitelisted_warnings"]
-    src_root = config["pdc_root_dir"].format(host) 
-    src = os.path.join(src_root, archive)
     job_id = rq.get_current_job().id
     dest = "{}_{}".format(os.path.join(dest_root, archive), job_id)
 
-    download_ok = download_from_pdc(src, description, dest, dsmc_log_dir, whitelist)
+    download_ok = download_from_pdc(archive_path, description, dest, dsmc_log_dir, whitelist)
 
     if not download_ok:
         return {"state": "error", "msg": "failed to properly download archive from pdc", "path": dest}
