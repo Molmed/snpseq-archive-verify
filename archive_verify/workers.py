@@ -110,6 +110,7 @@ def verify_archive(archive, archive_path, description, config):
     download_ok = download_from_pdc(archive_path, description, dest, dsmc_log_dir, whitelist)
 
     if not download_ok:
+        log.debug("Download of {} failed.".format(archive))
         return {"state": "error", "msg": "failed to properly download archive from pdc", "path": dest}
     else:
         archive = os.path.join(dest, archive)
@@ -117,6 +118,8 @@ def verify_archive(archive, archive_path, description, config):
         output_file = "{}/compare_md5sum.out".format(dest)
 
         if verified_ok:
+            log.debug("Verify of {} succeeded.".format(archive))
             return {"state": "done", "path": output_file, "msg": "sucessfully verified archive md5sums"}
         else:
+            log.debug("Verify of {} failed.".format(archive))
             return {"state": "error", "path": output_file, "msg": "failed to verify archive md5sums"}
