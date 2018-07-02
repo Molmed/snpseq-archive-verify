@@ -109,6 +109,13 @@ def verify_archive(archive, archive_path, description, config):
     :param config: A dict containing the apps configuration
     :returns A JSON with the result that will be kept in the Redis queue
     """
+    log.setLevel(logging.DEBUG)
+    fh = logging.FileHandler("/var/log/arteria/archive-verify/{}.log".format(description))
+    fh.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    log.addHandler(fh)
+
     log.debug("verify_archive started for {}".format(archive))
 
     dest_root = config["verify_root_dir"]
