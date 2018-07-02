@@ -81,6 +81,7 @@ def compare_md5sum(archive_dir):
     parent_dir = os.path.abspath(os.path.join(archive_dir, os.pardir))
     md5_output = os.path.join(parent_dir, "compare_md5sum.out")
     cmd = "cd {} && md5sum -c ./{} > {}".format(archive_dir, "checksums_prior_to_pdc.md5", md5_output)
+    log.debug("running '{}'".format(cmd))
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     p.communicate()
@@ -109,10 +110,13 @@ def verify_archive(archive, archive_path, description, config):
 
     download_ok = download_from_pdc(archive_path, description, dest, dsmc_log_dir, whitelist)
 
+    log.debug("download ok: {}".format(download_ok))
+
     if not download_ok:
         log.debug("Download of {} failed.".format(archive))
         return {"state": "error", "msg": "failed to properly download archive from pdc", "path": dest}
     else:
+        log.debug("verifying {}".format(archive))
         archive = os.path.join(dest, archive)
         verified_ok = compare_md5sum(archive)
         output_file = "{}/compare_md5sum.out".format(dest)
