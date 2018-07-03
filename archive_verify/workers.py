@@ -3,6 +3,7 @@ import re
 import rq
 import subprocess
 import os
+import datetime
 
 log = logging.getLogger(__name__)
 
@@ -67,7 +68,7 @@ def download_from_pdc(archive, description, dest, dsmc_log_dir, whitelist):
     dsmc_output, _ = p.communicate()
     dsmc_exit_code = p.returncode
 
-    log.debug("returncode for '{}': {}".format(cmd, p.dsmc_exit_code))
+    log.debug("returncode for '{}': {}".format(cmd, dsmc_exit_code))
 
     if dsmc_exit_code != 0:
         return _parse_dsmc_return_code(dsmc_exit_code, dsmc_output, whitelist)
@@ -109,8 +110,13 @@ def verify_archive(archive, archive_path, description, config):
     :param config: A dict containing the apps configuration
     :returns A JSON with the result that will be kept in the Redis queue
     """
+    dest_root = config["verify_root_dir"]
+    dsmc_log_dir = config["dsmc_log_dir"]
+    whitelist = config["whitelisted_warnings"]
+
+    now_str = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
     log.setLevel(logging.DEBUG)
-    fh = logging.FileHandler("/var/log/arteria/archive-verify/{}.log".format(description))
+    fh = logging.FileHandler("{}/{}-{}.log".format(dsmc_log_dir, description, now_str))
     fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     fh.setFormatter(formatter)
@@ -118,9 +124,6 @@ def verify_archive(archive, archive_path, description, config):
 
     log.debug("verify_archive started for {}".format(archive))
 
-    dest_root = config["verify_root_dir"]
-    dsmc_log_dir = config["dsmc_log_dir"]
-    whitelist = config["whitelisted_warnings"]
     job_id = rq.get_current_job().id
     dest = "{}_{}".format(os.path.join(dest_root, archive), job_id)
 
