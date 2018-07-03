@@ -61,7 +61,7 @@ def download_from_pdc(archive, description, dest, dsmc_log_dir, whitelist):
     :returns True if no errors or only whitelisted warnings were encountered, False otherwise 
     """
     log.debug("download_from_pdc started for {}".format(archive))
-    cmd = "export DMS_LOG={} && dsmc retr {}/ {}/ -subdir=yes -description='{}'".format(dsmc_log_dir, archive, dest, description)
+    cmd = "export DSM_LOG={} && dsmc retr {}/ {}/ -subdir=yes -description='{}'".format(dsmc_log_dir, archive, dest, description)
     log.debug("running '{}'".format(cmd))
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
@@ -114,7 +114,7 @@ def verify_archive(archive, archive_path, description, config):
     dsmc_log_dir = config["dsmc_log_dir"]
     whitelist = config["whitelisted_warnings"]
 
-    now_str = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
+    now_str = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')
     log.setLevel(logging.DEBUG)
     fh = logging.FileHandler("{}/{}-{}.log".format(dsmc_log_dir, description, now_str))
     fh.setLevel(logging.DEBUG)
