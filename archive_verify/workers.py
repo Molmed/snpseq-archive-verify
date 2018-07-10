@@ -40,13 +40,13 @@ def _parse_dsmc_return_code(exit_code, output, whitelist):
 
         for warning in warnings:
             if warning not in whitelist:
-                log.debug("A non-whitelisted DSMC warning was encountered. Reporting it as an error!")
+                log.debug("A non-whitelisted DSMC warning was encountered. Reporting it as an error! ('{}')".format(warning))
                 return False
 
         log.debug("Only whitelisted DSMC warnings were encountered. Everything is OK.")
         return True
     else:
-        log.info("An uncatched DSMC error code was encountered!")
+        log.info("An uncaught DSMC error code was encountered!")
         return False
 
 def download_from_pdc(archive, description, dest, dsmc_log_dir, whitelist):
@@ -62,13 +62,10 @@ def download_from_pdc(archive, description, dest, dsmc_log_dir, whitelist):
     """
     log.debug("download_from_pdc started for {}".format(archive))
     cmd = "export DSM_LOG={} && dsmc retr {}/ {}/ -subdir=yes -description='{}'".format(dsmc_log_dir, archive, dest, description)
-    log.debug("running '{}'".format(cmd))
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     dsmc_output, _ = p.communicate()
     dsmc_exit_code = p.returncode
-
-    log.debug("returncode for '{}': {}".format(cmd, dsmc_exit_code))
 
     if dsmc_exit_code != 0:
         return _parse_dsmc_return_code(dsmc_exit_code, dsmc_output, whitelist)
@@ -87,12 +84,9 @@ def compare_md5sum(archive_dir):
     parent_dir = os.path.abspath(os.path.join(archive_dir, os.pardir))
     md5_output = os.path.join(parent_dir, "compare_md5sum.out")
     cmd = "cd {} && md5sum -c ./{} > {}".format(archive_dir, "checksums_prior_to_pdc.md5", md5_output)
-    log.debug("running '{}'".format(cmd))
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     p.communicate()
-
-    log.debug("returncode for '{}': {}".format(cmd, p.returncode))
 
     if p.returncode != 0: 
         return False
@@ -128,8 +122,6 @@ def verify_archive(archive, archive_path, description, config):
     dest = "{}_{}".format(os.path.join(dest_root, archive), job_id)
 
     download_ok = download_from_pdc(archive_path, description, dest, dsmc_log_dir, whitelist)
-
-    log.debug("download ok: {}".format(download_ok))
 
     if not download_ok:
         log.debug("Download of {} failed.".format(archive))
