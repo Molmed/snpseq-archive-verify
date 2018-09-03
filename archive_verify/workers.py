@@ -40,13 +40,13 @@ def _parse_dsmc_return_code(exit_code, output, whitelist):
 
         for warning in warnings:
             if warning not in whitelist:
-                log.debug("A non-whitelisted DSMC warning was encountered. Reporting it as an error! ('{}')".format(warning))
+                log.error("A non-whitelisted DSMC warning was encountered. Reporting it as an error! ('{}')".format(warning))
                 return False
 
         log.debug("Only whitelisted DSMC warnings were encountered. Everything is OK.")
         return True
     else:
-        log.info("An uncaught DSMC error code was encountered!")
+        log.error("An uncaught DSMC error code was encountered!")
         return False
 
 def download_from_pdc(archive, description, dest, dsmc_log_dir, whitelist):
@@ -110,7 +110,7 @@ def verify_archive(archive, archive_path, description, config):
 
     now_str = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')
     log.setLevel(logging.DEBUG)
-    fh = logging.FileHandler("{}/{}-{}.log".format(dsmc_log_dir, description, now_str))
+    fh = logging.FileHandler(os.path.join(dsmc_log_dir, "{}-{}.log".format(description, now_str)))
     fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     fh.setFormatter(formatter)
