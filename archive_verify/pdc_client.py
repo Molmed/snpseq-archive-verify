@@ -2,8 +2,10 @@ import re
 import logging
 import os
 import subprocess
+import fnmatch
 
-log = logging.getLogger(__name__)
+# Share pre-configured workers log
+log = logging.getLogger('archive_verify.workers')
 
 
 class PdcClient():
@@ -101,6 +103,22 @@ class PdcClient():
 
 
 class MockPdcClient(PdcClient):
+    def __init__(self, archive_name, archive_pdc_path, archive_pdc_description, job_id, config):
+        super().__init__(archive_name, archive_pdc_path, archive_pdc_description, job_id, config)
+
+        self.predownloaded_archive_path = ''
+
+        # Find a pre-downloaded archive with a matching name
+        for file in os.listdir(os.path.join(self.dest_root)):
+            if fnmatch.fnmatch(file, f'{self.archive_name}*'):
+                self.predownloaded_archive_path = file
+
+    def dest(self):
+        """
+        :returns The path of the predownloaded archive.
+        """
+        return os.path.join(self.dest_root, self.predownloaded_archive_path)
+
     def download(self):
         """
         Instead of downloading the specified archive from PDC, this method
@@ -112,4 +130,10 @@ class MockPdcClient(PdcClient):
         into the verify_root_dir. Delete or edit some files from the archive if
         you wish to trigger a validation error.
         """
-        log.debug("Invoked MockPdcClient")
+
+        if not self.predownloaded_archive_path:
+            log.error(f"No archive containing the name {self.archive_name} found in {self.dest_root}")
+            return False
+        else:
+            log.debug(f"Found pre-downloaded archive at {self.predownloaded_archive_path}")
+            return True

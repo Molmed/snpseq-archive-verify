@@ -1,6 +1,6 @@
 port: 8989
 base_url: "/api/1.0"
-verify_root_dir: "data/verify/"
+verify_root_dir: "/data/verify/"
 pdc_root_dir: "data/{}/runfolders/"
 dsmc_log_dir: "logs/"
 job_timeout: "48h"      # maximum run-time for a job

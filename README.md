@@ -31,6 +31,12 @@ To use this method:
 
     pdc_client: "MockPdcClient"
 
+Note that when an archive is downloaded from PDC using snpseq-archive-verify, the downloaded directory is formatted with the name of the archive plus the RQ job id, like so:
+
+    {verify_root_dir}/{archive_name}_{rq_job_id}
+
+When mocking downloading, we search verify_root_dir for archive_name and use the first directory found, ignoring the rq_job_id.
+
 
 Running tests
 -------------

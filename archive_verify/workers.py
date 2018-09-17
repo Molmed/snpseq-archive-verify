@@ -71,7 +71,7 @@ def verify_archive(archive_name, archive_pdc_path, archive_pdc_description, conf
     job_id = rq.get_current_job().id
     pdc_client = pdc_class(archive_name, archive_pdc_path, archive_pdc_description, job_id, config)
     dest = pdc_client.dest()
-    download_ok = pdc_client.download(dsmc_log_dir)
+    download_ok = pdc_client.download()
 
     if not download_ok:
         log.debug("Download of {} failed.".format(archive_name))
