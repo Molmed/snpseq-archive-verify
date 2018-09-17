@@ -40,6 +40,16 @@ def get_pdc_client_class(config):
     return MockPdcClient if config.get("pdc_client", "PdcClient") == "MockPdcClient" else PdcClient
 
 
+def configure_log(dsmc_log_dir, archive_pdc_description):
+    now_str = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')
+    log.setLevel(logging.DEBUG)
+    fh = logging.FileHandler(os.path.join(dsmc_log_dir, "{}-{}.log".format(archive_pdc_description, now_str)))
+    fh.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    log.addHandler(fh)
+
+
 def verify_archive(archive_name, archive_pdc_path, archive_pdc_description, config):
     """
     Our main worker function. This will be put into the RQ/Redis queue when the /verify endpoint gets called. 
@@ -52,25 +62,17 @@ def verify_archive(archive_name, archive_pdc_path, archive_pdc_description, conf
     :returns A JSON with the result that will be kept in the Redis queue
     """
     dsmc_log_dir = config["dsmc_log_dir"]
+    configure_log(dsmc_log_dir, archive_pdc_description)
+    log.debug("verify_archive started for {}".format(archive_name))
+
+
     whitelist = config["whitelisted_warnings"]
 
     pdc_class = get_pdc_client_class(config)
     job_id = rq.get_current_job().id
     pdc_client = pdc_class(archive_name, archive_pdc_path, archive_pdc_description, job_id, config)
-    log.debug(f"Using PDC Client of type: {pdc_class}")
-
-    now_str = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')
-    log.setLevel(logging.DEBUG)
-    fh = logging.FileHandler(os.path.join(dsmc_log_dir, "{}-{}.log".format(archive_pdc_description, now_str)))
-    fh.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    fh.setFormatter(formatter)
-    log.addHandler(fh)
-
-    log.debug("verify_archive started for {}".format(archive_name))
-
+    log.debug(f"Using PDC Client of type: {pdc_class.__name__}")
     dest = pdc_client.dest()
-
     download_ok = pdc_client.download(dsmc_log_dir, whitelist)
 
     if not download_ok:

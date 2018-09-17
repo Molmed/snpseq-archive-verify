@@ -43,7 +43,7 @@ class TestPdcClient(unittest.TestCase):
     def test_download_from_pdc_ok(self, mock_popen):
         mock_popen.return_value.returncode = 0
         mock_popen.return_value.communicate.return_value = ("foobar", '')
-        ret = self.getPdcClient().download("log-dir", "whitelist")
+        ret = self.getPdcClient().download("whitelist")
         self.assertEqual(ret, True)
 
     # Check when dsmc returns != 0
@@ -55,5 +55,5 @@ class TestPdcClient(unittest.TestCase):
             mock_popen.return_value.returncode = 42
             mock_popen.return_value.communicate.return_value = ("foobar", '')
             mock_parse_dsmc.return_value = exp_ret
-            ret = self.getPdcClient().download("log-dir", "whitelist")
+            ret = self.getPdcClient().download("whitelist")
             self.assertEqual(ret, exp_ret)
