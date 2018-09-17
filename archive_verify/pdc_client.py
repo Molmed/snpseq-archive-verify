@@ -139,4 +139,3 @@ class MockPdcClient(PdcClient):
         else:
             log.debug(f"Found pre-downloaded archive at {self.predownloaded_archive_path}")
             return True
-
