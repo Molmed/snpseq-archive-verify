@@ -65,15 +65,13 @@ def verify_archive(archive_name, archive_pdc_path, archive_pdc_description, conf
     configure_log(dsmc_log_dir, archive_pdc_description)
     log.debug("verify_archive started for {}".format(archive_name))
 
-
-    whitelist = config["whitelisted_warnings"]
-
     pdc_class = get_pdc_client_class(config)
+    log.debug(f"Using PDC Client of type: {pdc_class.__name__}")
+
     job_id = rq.get_current_job().id
     pdc_client = pdc_class(archive_name, archive_pdc_path, archive_pdc_description, job_id, config)
-    log.debug(f"Using PDC Client of type: {pdc_class.__name__}")
     dest = pdc_client.dest()
-    download_ok = pdc_client.download(dsmc_log_dir, whitelist)
+    download_ok = pdc_client.download(dsmc_log_dir)
 
     if not download_ok:
         log.debug("Download of {} failed.".format(archive_name))
