@@ -106,6 +106,16 @@ class PdcClient():
 
 
 class MockPdcClient(PdcClient):
+    """
+    Instead of downloading the specified archive from PDC, the download method
+    checks verify_root_dir for a pre-downloaded archive with the specified name.
+    This can be used to test archive verification in environments where
+    dsmc cannot be easily installed, e.g. local development environments.
+
+    To use this method, copy an archive that has been pre-downloaded from PDC
+    into the verify_root_dir. Delete or edit some files from the archive if
+    you wish to trigger a validation error.
+    """
     def __init__(self, archive_name, archive_pdc_path, archive_pdc_description, job_id, config):
         super().__init__(archive_name, archive_pdc_path, archive_pdc_description, job_id, config)
 
@@ -123,17 +133,6 @@ class MockPdcClient(PdcClient):
         return os.path.join(self.dest_root, self.predownloaded_archive_path)
 
     def download(self):
-        """
-        Instead of downloading the specified archive from PDC, this method
-        checks the dest dir for a pre-downloaded archive with the specified name.
-        This can be used to test archive verification in environments where
-        dsmc cannot be easily installed, e.g. local development environments.
-
-        To use this method, copy an archive that has been pre-downloaded from PDC
-        into the verify_root_dir. Delete or edit some files from the archive if
-        you wish to trigger a validation error.
-        """
-
         if not self.predownloaded_archive_path:
             log.error(f"No archive containing the name {self.archive_name} found in {self.dest_root}")
             return False
