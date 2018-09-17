@@ -30,7 +30,7 @@ def compare_md5sum(archive_dir):
         return True
 
 
-def get_pdc_client(config):
+def get_pdc_client_class(config):
     """
     Determines which PDC Client should be used.
 
@@ -40,44 +40,45 @@ def get_pdc_client(config):
     return MockPdcClient if config.get("pdc_client", "PdcClient") == "MockPdcClient" else PdcClient
 
 
-def verify_archive(archive, archive_path, description, config):
+def verify_archive(archive_name, archive_pdc_path, archive_pdc_description, config):
     """
     Our main worker function. This will be put into the RQ/Redis queue when the /verify endpoint gets called. 
     Downloads the specified archive from PDC and then verifies the MD5 sums. 
 
-    :param archive: The name of the archive we shall download
-    :param archive_path: The path to the archive on PDC
-    :param description: The unique description that was used when uploading the archive to PDC
+    :param archive_name: The name of the archive we shall download
+    :param archive_pdc_path: The path in PDC TSM to the archive that we want to download
+    :param archive_pdc_description: The unique description that was used when uploading the archive to PDC
     :param config: A dict containing the apps configuration
     :returns A JSON with the result that will be kept in the Redis queue
     """
-    dest_root = config["verify_root_dir"]
     dsmc_log_dir = config["dsmc_log_dir"]
     whitelist = config["whitelisted_warnings"]
-    pdc_client = get_pdc_client(config)
-    log.debug(f"Using PDC Client of type: {pdc_client}")
+
+    pdc_class = get_pdc_client_class(config)
+    job_id = rq.get_current_job().id
+    pdc_client = pdc_class(archive_name, archive_pdc_path, archive_pdc_description, job_id, config)
+    log.debug(f"Using PDC Client of type: {pdc_class}")
 
     now_str = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')
     log.setLevel(logging.DEBUG)
-    fh = logging.FileHandler(os.path.join(dsmc_log_dir, "{}-{}.log".format(description, now_str)))
+    fh = logging.FileHandler(os.path.join(dsmc_log_dir, "{}-{}.log".format(archive_pdc_description, now_str)))
     fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     fh.setFormatter(formatter)
     log.addHandler(fh)
 
-    log.debug("verify_archive started for {}".format(archive))
+    log.debug("verify_archive started for {}".format(archive_name))
 
-    job_id = rq.get_current_job().id
-    dest = "{}_{}".format(os.path.join(dest_root, archive), job_id)
+    dest = pdc_client.dest()
 
-    download_ok = pdc_client.download(archive_path, description, dest, dsmc_log_dir, whitelist)
+    download_ok = pdc_client.download(dsmc_log_dir, whitelist)
 
     if not download_ok:
-        log.debug("Download of {} failed.".format(archive))
+        log.debug("Download of {} failed.".format(archive_name))
         return {"state": "error", "msg": "failed to properly download archive from pdc", "path": dest}
     else:
-        log.debug("verifying {}".format(archive))
-        archive = os.path.join(dest, archive)
+        log.debug("verifying {}".format(archive_name))
+        archive = os.path.join(dest, archive_name)
         verified_ok = compare_md5sum(archive)
         output_file = "{}/compare_md5sum.out".format(dest)
 

@@ -11,6 +11,9 @@ class TestPdcClient(unittest.TestCase):
         with open("tests/test_config.yaml") as config:
             self.config = yaml.load(config)
 
+    def getPdcClient(self):
+        return PdcClient("archive", "path", "descr", "1234", self.config)
+
     # Test with whitelisted warnings
     def test_dsmc_whitelist_ok(self):
         exit_code = 8
@@ -40,7 +43,7 @@ class TestPdcClient(unittest.TestCase):
     def test_download_from_pdc_ok(self, mock_popen):
         mock_popen.return_value.returncode = 0
         mock_popen.return_value.communicate.return_value = ("foobar", '')
-        ret = PdcClient.download("archive", "descr", "dest", "log-dir", "whitelist")
+        ret = self.getPdcClient().download("log-dir", "whitelist")
         self.assertEqual(ret, True)
 
     # Check when dsmc returns != 0
@@ -52,5 +55,5 @@ class TestPdcClient(unittest.TestCase):
             mock_popen.return_value.returncode = 42
             mock_popen.return_value.communicate.return_value = ("foobar", '')
             mock_parse_dsmc.return_value = exp_ret
-            ret = PdcClient.download("archive", "descr", "dest", "logdir", "whitelist")
+            ret = self.getPdcClient().download("log-dir", "whitelist")
             self.assertEqual(ret, exp_ret)
