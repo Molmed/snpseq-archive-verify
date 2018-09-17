@@ -17,6 +17,21 @@ Try running it:
      pipenv run ./archive-verify-ws -c=config/
      pipenv run rq worker
 
+
+Mock Downloading
+----------------
+
+If you are running this service locally and don't have IBM's dsmc client installed, you can skip the downloading step and verify an archive that is already on your machine.
+
+To use this method:
+- copy an archive that has been pre-downloaded from PDC into the verify_root_dir set in app.yaml
+- Delete or edit some files from the archive if you wish to trigger a validation error.
+- in app.yml, set:
+
+
+    pdc_client: "MockPdcClient"
+
+
 Running tests
 -------------
 

@@ -1,14 +1,31 @@
+import copy
 import mock
 import unittest
 import yaml
 
-from archive_verify.workers import compare_md5sum, verify_archive
+from archive_verify.workers import compare_md5sum, get_pdc_client, verify_archive
 
 
 class TestWorkers(unittest.TestCase):
     def setUp(self):
         with open("tests/test_config.yaml") as config:
             self.config = yaml.load(config)
+
+    def test_pdc_client_is_default(self):
+        pdc_client = get_pdc_client(self.config)
+        self.assertEqual(pdc_client.__name__, 'PdcClient')
+
+    def test_pdc_client_selected(self):
+        config = copy.copy(self.config)
+        config['pdc_client'] = 'PdcClient'
+        pdc_client = get_pdc_client(config)
+        self.assertEqual(pdc_client.__name__, 'PdcClient')
+
+    def test_mock_pdc_client_selected(self):
+        config = copy.copy(self.config)
+        config['pdc_client'] = 'MockPdcClient'
+        pdc_client = get_pdc_client(config)
+        self.assertEqual(pdc_client.__name__, 'MockPdcClient')
 
     # Check with passing checksums
     @mock.patch('subprocess.Popen')

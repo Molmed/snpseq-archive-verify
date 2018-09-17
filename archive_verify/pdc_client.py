@@ -1,20 +1,18 @@
 import re
 import logging
+# import os
 import subprocess
 
 log = logging.getLogger(__name__)
 
 
-class BasePdcClient():
+class PdcClient():
     """
     Base class representing a PDC client.
-    Staging and production environments should instantiate PdcClient.
+    Staging and production environments should instantiate PdcClient (default).
     Local and testing environments should instantiate MockPdcClient.
-    Default is PdcClient.
     """
 
-
-class PdcClient(BasePdcClient):
     @staticmethod
     def download(archive, description, dest, dsmc_log_dir, whitelist):
         """
@@ -47,7 +45,7 @@ class PdcClient(BasePdcClient):
         Parses the dsmc output when we've encountered a non-zero exit code. For some certain exit codes,
         warnings and errors we still want to return successfully.
 
-        :param exit_code: The exit code recieved from the failing dsmc process
+        :param exit_code: The exit code received from the failing dsmc process
         :param output: The text output from the dsmc process
         :param whitelist: A list of whitelisted warnings
         :returns True if only whitelisted warnings was encountered in the output, otherwise False
@@ -86,8 +84,19 @@ class PdcClient(BasePdcClient):
             return False
 
 
-# TODO: Implement
-class MockPdcClient(BasePdcClient):
-     @staticmethod
-     def download(archive, description, dest, dsmc_log_dir, whitelist):
-         log.debug(f"Invoked MockPdcClient with parameters: {archive} {description} {dest} {dsmc_log_dir} {whitelist}")
+class MockPdcClient(PdcClient):
+    @staticmethod
+    def download(archive, description, dest, dsmc_log_dir, whitelist):
+        """
+        Instead of downloading the specified archive from PDC, this method
+        checks the dest dir for a pre-downloaded archive with the specified name.
+        This can be used to test archive verification in environments where
+        dsmc cannot be easily installed, e.g. local development environments.
+
+        To use this method, copy an archive that has been pre-downloaded from PDC
+        into the verify_root_dir. Delete or edit some files from the archive if
+        you wish to trigger a validation error.
+        """
+        # TODO: implement
+        log.debug(f"Invoked MockPdcClient with parameters: {archive} {description} {dest} {dsmc_log_dir} {whitelist}")
+        # archive = os.path.join(dest, archive)

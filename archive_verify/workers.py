@@ -30,6 +30,16 @@ def compare_md5sum(archive_dir):
         return True
 
 
+def get_pdc_client(config):
+    """
+    Determines which PDC Client should be used.
+
+    :param config: A dict containing the apps configuration
+    :returns A PDC Client.
+    """
+    return MockPdcClient if config.get("pdc_client", "PdcClient") == "MockPdcClient" else PdcClient
+
+
 def verify_archive(archive, archive_path, description, config):
     """
     Our main worker function. This will be put into the RQ/Redis queue when the /verify endpoint gets called. 
@@ -44,7 +54,7 @@ def verify_archive(archive, archive_path, description, config):
     dest_root = config["verify_root_dir"]
     dsmc_log_dir = config["dsmc_log_dir"]
     whitelist = config["whitelisted_warnings"]
-    pdc_client = MockPdcClient if config.get("pdc_client", "PdcClient") == "MockPdcClient" else PdcClient
+    pdc_client = get_pdc_client(config)
     log.debug(f"Using PDC Client of type: {pdc_client}")
 
     now_str = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')
