@@ -57,6 +57,9 @@ class PdcClient():
         log.debug("download_from_pdc completed successfully for {}".format(self.archive_pdc_path))
         return True
 
+    def downloaded_archive_path(self):
+        return os.path.join(self.dest(), self.archive_name)
+
     @staticmethod
     def _parse_dsmc_return_code(exit_code, output, whitelist):
         """
@@ -137,3 +140,4 @@ class MockPdcClient(PdcClient):
         else:
             log.debug(f"Found pre-downloaded archive at {self.predownloaded_archive_path}")
             return True
+

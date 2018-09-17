@@ -20,6 +20,7 @@ def compare_md5sum(archive_dir):
     parent_dir = os.path.abspath(os.path.join(archive_dir, os.pardir))
     md5_output = os.path.join(parent_dir, "compare_md5sum.out")
     cmd = "cd {} && md5sum -c ./{} > {}".format(archive_dir, "checksums_prior_to_pdc.md5", md5_output)
+    log.debug(f"Executing verification: {cmd}...")
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     p.communicate()
@@ -77,14 +78,14 @@ def verify_archive(archive_name, archive_pdc_path, archive_pdc_description, conf
         log.debug("Download of {} failed.".format(archive_name))
         return {"state": "error", "msg": "failed to properly download archive from pdc", "path": dest}
     else:
-        log.debug("verifying {}".format(archive_name))
-        archive = os.path.join(dest, archive_name)
+        log.debug("Verifying {}...".format(archive_name))
+        archive = pdc_client.downloaded_archive_path()
         verified_ok = compare_md5sum(archive)
         output_file = "{}/compare_md5sum.out".format(dest)
 
         if verified_ok:
-            log.debug("Verify of {} succeeded.".format(archive))
+            log.info("Verify of {} succeeded.".format(archive))
             return {"state": "done", "path": output_file, "msg": "sucessfully verified archive md5sums"}
         else:
-            log.debug("Verify of {} failed.".format(archive))
+            log.info("Verify of {} failed.".format(archive))
             return {"state": "error", "path": output_file, "msg": "failed to verify archive md5sums"}
