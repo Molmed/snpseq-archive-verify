@@ -3,7 +3,7 @@ import mock
 import unittest
 import yaml
 
-from archive_verify.workers import compare_md5sum, get_pdc_client_class, verify_archive
+from archive_verify.workers import compare_md5sum, pdc_client_factory, verify_archive
 
 
 class TestWorkers(unittest.TestCase):
@@ -12,19 +12,19 @@ class TestWorkers(unittest.TestCase):
             self.config = yaml.load(config)
 
     def test_pdc_client_is_default(self):
-        pdc_client_class = get_pdc_client_class(self.config)
+        pdc_client_class = pdc_client_factory(self.config)
         self.assertEqual(pdc_client_class.__name__, 'PdcClient')
 
     def test_pdc_client_selected(self):
         config = copy.copy(self.config)
         config['pdc_client'] = 'PdcClient'
-        pdc_client_class = get_pdc_client_class(config)
+        pdc_client_class = pdc_client_factory(config)
         self.assertEqual(pdc_client_class.__name__, 'PdcClient')
 
     def test_mock_pdc_client_selected(self):
         config = copy.copy(self.config)
         config['pdc_client'] = 'MockPdcClient'
-        pdc_client_class = get_pdc_client_class(config)
+        pdc_client_class = pdc_client_factory(config)
         self.assertEqual(pdc_client_class.__name__, 'MockPdcClient')
 
     # Check with passing checksums

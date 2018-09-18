@@ -41,7 +41,7 @@ class PdcClient():
         Downloads the specified archive from PDC to a unique location.
         :returns True if no errors or only whitelisted warnings were encountered, False otherwise
         """
-        log.debug("download_from_pdc started for {}".format(self.archive_pdc_path))
+        log.info("Download_from_pdc started for {}".format(self.archive_pdc_path))
         cmd = "export DSM_LOG={} && dsmc retr {}/ {}/ -subdir=yes -description='{}'".format(self.dsmc_log_dir,
                                                                                             self.archive_pdc_path,
                                                                                             self.dest(),
@@ -54,7 +54,7 @@ class PdcClient():
         if dsmc_exit_code != 0:
             return PdcClient._parse_dsmc_return_code(dsmc_exit_code, dsmc_output, self.whitelisted_warnings)
 
-        log.debug("download_from_pdc completed successfully for {}".format(self.archive_pdc_path))
+        log.info("Download_from_pdc completed successfully for {}".format(self.archive_pdc_path))
         return True
 
     def downloaded_archive_path(self):
@@ -71,11 +71,11 @@ class PdcClient():
         :param whitelist: A list of whitelisted warnings
         :returns True if only whitelisted warnings was encountered in the output, otherwise False
         """
-        log.debug("DSMC process returned an error!")
+        log.info("DSMC process returned an error!")
 
         # DSMC sets return code to 8 when a warning was encountered.
         if exit_code == 8:
-            log.debug("DSMC process actually returned a warning.")
+            log.info("DSMC process actually returned a warning.")
 
             output = output.splitlines()
 
@@ -90,7 +90,7 @@ class PdcClient():
                 for match in matches:
                     warnings.append(match)
 
-            log.debug("Warnings found in DSMC output: {}".format(set(warnings)))
+            log.info("Warnings found in DSMC output: {}".format(set(warnings)))
 
             for warning in warnings:
                 if warning not in whitelist:
@@ -98,7 +98,7 @@ class PdcClient():
                         warning))
                     return False
 
-            log.debug("Only whitelisted DSMC warnings were encountered. Everything is OK.")
+            log.info("Only whitelisted DSMC warnings were encountered. Everything is OK.")
             return True
         else:
             log.error("An uncaught DSMC error code was encountered!")
@@ -137,5 +137,5 @@ class MockPdcClient(PdcClient):
             log.error(f"No archive containing the name {self.archive_name} found in {self.dest_root}")
             return False
         else:
-            log.debug(f"Found pre-downloaded archive at {self.predownloaded_archive_path}")
+            log.info(f"Found pre-downloaded archive at {self.predownloaded_archive_path}")
             return True
