@@ -85,7 +85,8 @@ def verify_archive(archive_name, archive_pdc_path, archive_pdc_description, conf
 
         if verified_ok:
             log.info("Verify of {} succeeded.".format(archive))
-            return {"state": "done", "path": output_file, "msg": "sucessfully verified archive md5sums"}
+            pdc_client.cleanup()
+            return {"state": "done", "path": output_file, "msg": "Successfully verified archive md5sums."}
         else:
             log.info("Verify of {} failed.".format(archive))
-            return {"state": "error", "path": output_file, "msg": "failed to verify archive md5sums"}
+            return {"state": "error", "path": output_file, "msg": "Failed to verify archive md5sums."}
