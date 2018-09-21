@@ -42,7 +42,8 @@ class TestWorkers(unittest.TestCase):
         self.assertEqual(ret, False)
 
     def test_verify_archive_download_not_ok(self): 
-        with mock.patch('archive_verify.pdc_client.PdcClient.download') as mock_download, mock.patch('rq.get_current_job') as mock_job:
+        with mock.patch('archive_verify.pdc_client.PdcClient.download') as mock_download, \
+                mock.patch('rq.get_current_job') as mock_job:
             job_id = "42-42-42-24-24-24"
             mock_download.return_value = False
             mock_job.return_value.id = job_id
@@ -51,7 +52,10 @@ class TestWorkers(unittest.TestCase):
             self.assertEqual(job_id in ret["path"], True)
 
     def test_verify_archive_verify_not_ok(self): 
-        with mock.patch('archive_verify.pdc_client.PdcClient.download') as mock_download, mock.patch('rq.get_current_job') as mock_job, mock.patch('archive_verify.workers.compare_md5sum') as mock_md5sum:
+        with mock.patch('archive_verify.pdc_client.PdcClient.download') as mock_download, \
+                mock.patch('rq.get_current_job') as mock_job, \
+                mock.patch('archive_verify.workers.compare_md5sum') as mock_md5sum, \
+                mock.patch('archive_verify.pdc_client.PdcClient.cleanup') as mock_cleanup:
             job_id = "24-24-24-24"
             archive = "my-archive-101"
             mock_download.return_value = True
@@ -60,9 +64,13 @@ class TestWorkers(unittest.TestCase):
             ret = verify_archive(archive, "my-host", "my-descr", self.config)
             self.assertEqual(ret["state"], "error")
             self.assertEqual(archive in ret["path"], True)
+            mock_cleanup.assert_not_called()
 
     def test_verify_archive_verify_ok(self):
-        with mock.patch('archive_verify.pdc_client.PdcClient.download') as mock_download, mock.patch('rq.get_current_job') as mock_job, mock.patch('archive_verify.workers.compare_md5sum') as mock_md5sum:
+        with mock.patch('archive_verify.pdc_client.PdcClient.download') as mock_download, \
+                mock.patch('rq.get_current_job') as mock_job, \
+                mock.patch('archive_verify.workers.compare_md5sum') as mock_md5sum, \
+                mock.patch('archive_verify.pdc_client.PdcClient.cleanup') as mock_cleanup:
             job_id = "24-24-24-24"
             archive = "my-archive-101" 
             mock_download.return_value = True
@@ -70,6 +78,7 @@ class TestWorkers(unittest.TestCase):
             mock_md5sum.return_value = True
             ret = verify_archive(archive, "my-host", "my-descr", self.config)
             self.assertEqual(ret["state"], "done")
-            self.assertEqual(archive in ret["path"] and job_id in ret["path"], True) 
+            self.assertEqual(archive in ret["path"] and job_id in ret["path"], True)
+            mock_cleanup.assert_called()
             
 

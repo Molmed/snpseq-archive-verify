@@ -57,3 +57,8 @@ class TestPdcClient(unittest.TestCase):
             mock_parse_dsmc.return_value = exp_ret
             ret = self.getPdcClient().download()
             self.assertEqual(ret, exp_ret)
+
+    def test_cleanup(self):
+        with mock.patch('shutil.rmtree') as mock_rmtree:
+            self.getPdcClient().cleanup()
+            mock_rmtree.assert_called_with("data/verify/archive_1234")

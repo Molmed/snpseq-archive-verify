@@ -1,8 +1,9 @@
-import re
+import fnmatch
 import logging
 import os
+import re
+import shutil
 import subprocess
-import fnmatch
 
 # Share pre-configured workers log
 log = logging.getLogger('archive_verify.workers')
@@ -59,6 +60,9 @@ class PdcClient():
 
     def downloaded_archive_path(self):
         return os.path.join(self.dest(), self.archive_name)
+
+    def cleanup(self):
+        shutil.rmtree(self.dest())
 
     @staticmethod
     def _parse_dsmc_return_code(exit_code, output, whitelist):
