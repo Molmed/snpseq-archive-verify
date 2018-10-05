@@ -15,3 +15,6 @@ job_result_ttl: "-1"    # maximum time to keep job result; -1 never expires
 #
 # See full list at e.g. https://www.ibm.com/support/knowledgecenter/en/SSGSG7_7.1.1/com.ibm.itsm.msgs.client.doc/msgs_client_list_intro.html
 whitelisted_warnings: ["ANS1809W", "ANS2042W", "ANS2250W"]
+
+# For local use; remove this in environments where the dsmc client is installed
+pdc_client: "MockPdcClient"
