@@ -4,11 +4,14 @@ url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
+[requires]
+python_version = "3.6"
 
 [packages]
 
 aiohttp = "==2.3.7"
 rq = "==0.10.0"
+redis = "==2.10.6"
 aiodns = "==1.1.1"
 cchardet = "==2.1.1"
 pyyaml = "==3.12"
