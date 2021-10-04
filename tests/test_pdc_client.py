@@ -9,7 +9,7 @@ class TestPdcClient(unittest.TestCase):
 
     def setUp(self):
         with open("tests/test_config.yaml") as config:
-            self.config = yaml.load(config)
+            self.config = yaml.safe_load(config)
 
     def getPdcClient(self):
         return PdcClient("archive", "path", "descr", "1234", self.config)

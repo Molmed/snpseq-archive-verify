@@ -9,16 +9,17 @@ python_version = "3.6"
 
 [packages]
 
-aiohttp = "==2.3.7"
+aiohttp = "==3.7.4"
 rq = "==0.10.0"
 redis = "==2.10.6"
 aiodns = "==1.1.1"
 cchardet = "==2.1.1"
-pyyaml = "==3.12"
-yarl = "==0.18.0"
+pyyaml = "==5.4"
+yarl = "==1.6.3"
 
 
 [dev-packages]
 
 mock = "*"
 nose = "*"
+fakeredis = "*"

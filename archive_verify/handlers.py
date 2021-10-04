@@ -1,9 +1,8 @@
-import json
 import logging
 import os
 
 from aiohttp import web
-from redis import Redis
+import archive_verify.redis_client as redis_client
 from rq import Queue
 
 from archive_verify.workers import verify_archive
@@ -31,7 +30,7 @@ async def verify(request):
     # use a supplied path if available, otherwise construct it from the src_root and archive
     archive_path = path or os.path.join(src_root, archive)
 
-    redis_conn = Redis()
+    redis_conn = redis_client.get_redis_instance()
     q = Queue(connection=redis_conn)
 
     # Enqueue the verify_archive function with the user supplied input parameters.
@@ -63,7 +62,7 @@ async def status(request):
     """
     job_id = str(request.match_info['job_id'])
 
-    redis_conn = Redis()
+    redis_conn = redis_client.get_redis_instance()
     q = Queue(connection=redis_conn)
     job = q.fetch_job(job_id)
 

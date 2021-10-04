@@ -7,12 +7,24 @@ The web service enqueues certain job functions in the RQ/Redis queue, where they
 
 The downloaded files are deleted on successful verification, and retained if any error occurs.
 
+Pre-requisites
+--------------
+You will need python 3.6 and redis.
+
+Install redis with:
+
+    apt-get install redis-server
+
+And start it with:
+
+    redis-server
+
+
 Trying it out
 -------------
 
     python3 -m pip install pipenv
     pipenv install --deploy
-    apt-get install redis-server
 
 Try running it:
 
