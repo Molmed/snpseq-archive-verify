@@ -9,7 +9,7 @@ from archive_verify.workers import compare_md5sum, pdc_client_factory, verify_ar
 class TestWorkers(unittest.TestCase):
     def setUp(self):
         with open("tests/test_config.yaml") as config:
-            self.config = yaml.load(config)
+            self.config = yaml.safe_load(config)
 
     def test_pdc_client_is_default(self):
         pdc_client_class = pdc_client_factory(self.config)
