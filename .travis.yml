@@ -1,16 +1,17 @@
 language: python
 
 python:
-        - "3.6.12"
+        - "3.9.10"
 
 before_install:
-        - sudo python -m pip install pipenv
+        - python -m venv --upgrade-deps .venv
 
 install:
-        - pipenv install --dev
+        - source .venv/bin/activate
+        - pip install -r requirements/dev .
 
 script:
-        - pipenv run nosetests tests/
+        - nosetests tests/
 
 notifications:
         email: false

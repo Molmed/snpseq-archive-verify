@@ -1,5 +1,5 @@
-import mock
 import unittest
+import unittest.mock as mock
 import yaml
 
 from archive_verify.pdc_client import PdcClient
