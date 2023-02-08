@@ -1,51 +1,63 @@
 SNPSEQ Archive Verify
 ==================
 
-A self contained (aiohttp) REST service that helps verify uploaded SNP&SEQ archives by first downloading the archive from PDC, and then compare the MD5 sums for all associated files. 
+A self contained (aiohttp) REST service that helps verify uploaded SNP&SEQ archives by first downloading the archive 
+PDC, and then compare the MD5 sums for all associated files. The downloaded files are deleted on successful 
+verification, and retained if any error occurs.
 
-The web service enqueues certain job functions in the RQ/Redis queue, where they get picked up by the separate RQ worker process. 
+The service is composed of 3 components which must all be running and the system must be set up to allow the services 
+to communicate over the configured protocols and ports (refer to the redis documentation for details):
 
-The downloaded files are deleted on successful verification, and retained if any error occurs.
+- archive-verify-ws REST service
+- Redis queue server
+- RQ worker
+
+The web service enqueues certain job functions in the RQ/Redis queue, where they get picked up by the separate RQ 
+worker process.  
 
 Pre-requisites
 --------------
-You will need python 3.6 and redis.
+You will need python >=3.9 and redis.
 
-Install redis with:
+[Download and install redis](https://redis.io/docs/getting-started/installation/install-redis-on-linux/)
 
-    apt-get install redis-server
 
-And start it with:
+Install
+-------
+It is recommended to set up the service in a virtual environment. [venv](https://docs.python.org/3/library/venv.html) 
+is used below with bash on a Linux system. 
+
+    python3 -m venv --upgrade-deps .venv
+    source .venv/bin/activate
+    pip install -r requirements/prod .
+
+Running the service
+-------------------
+
+Start the Redis server and RQ worker:
 
     redis-server
+    rq worker
 
+Start the REST service
 
-Trying it out
--------------
-
-    python3 -m pip install pipenv
-    pipenv install --deploy
-
-Try running it:
-
-     pipenv run ./archive-verify-ws -c=config/
-     pipenv run rq worker
+    archive-verify-ws -c=config/
 
 
 Mock Downloading
 ----------------
 
-If you are running this service locally and don't have IBM's dsmc client installed, you can skip the downloading step and verify an archive that is already on your machine.
+If you are running this service locally and don't have IBM's dsmc client installed, you can skip the downloading step 
+and verify an archive that is already on your machine.
 
 To use this method:
-- copy* an archive that has been pre-downloaded from PDC into the verify_root_dir set in app.yaml
+- copy an archive that has been pre-downloaded from PDC into the verify_root_dir set in app.yaml
 - Delete or edit some files from the archive if you wish to trigger a validation error.
 - in app.yml, set:
 
-
     pdc_client: "MockPdcClient"
     
-\*Note that the archive will be deleted from verify_root_dir on successful verification
+*Note that the archive will be deleted from verify_root_dir on successful verification*
 
 #### Naming Conventions for Mock Download ####
 Note that when an archive is downloaded from PDC using snpseq-archive-verify, the downloaded directory is formatted with the name of the archive plus the RQ job id, like so:
@@ -58,8 +70,9 @@ When mocking downloading, we search verify_root_dir for archive_name and use the
 Running tests
 -------------
 
-    pipenv install --dev
-    pipenv run nosetests tests/
+    source .venv/bin/activate
+    pip install -e -r requirements/dev .
+    nosetests tests/
 
 REST endpoints
 --------------
@@ -71,5 +84,3 @@ Enqueue a verification job of a specific archive:
 Check the current status of an enqueued job: 
 
     curl -i -X "GET" http://localhost:8989/api/1.0/status/<job-uuid-returned-from-verify-endpoint>
-
-

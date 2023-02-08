@@ -11,9 +11,11 @@ from aiohttp import web
 
 log = logging.getLogger(__name__)
 
+
 def setup_routes(app):
     app.router.add_post(app["config"]["base_url"] + "/verify", handlers.verify)
     app.router.add_get(app["config"]["base_url"] + "/status/{job_id}", handlers.status)
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -27,24 +29,27 @@ def parse_args():
 
     return args
 
+
 def load_config(args):
     config_file = os.path.join(args.configroot, "app.yaml")
     logger_file = os.path.join(args.configroot, "logger.yaml")
 
     try:
         with open(logger_file) as logger:
-            logger_conf = yaml.load(logger)
+            logger_conf = yaml.safe_load(logger)
             logging.config.dictConfig(logger_conf)
 
         with open(config_file) as config:
-            return yaml.load(config)
+            return yaml.safe_load(config)
     except Exception as e:
         log.error("Could not parse config file {}".format(e))
         sys.exit(1)
 
+
 def init_config():
     args = parse_args()
     return load_config(args)
+
 
 def start():
     conf = init_config()
