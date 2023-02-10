@@ -47,7 +47,7 @@ class TestWorkers(unittest.TestCase):
             job_id = "42-42-42-24-24-24"
             mock_download.return_value = False
             mock_job.return_value.id = job_id
-            ret = verify_archive("my-archive", "my-host", "my-descr", self.config)
+            ret = verify_archive("my-archive", "my-host", "my-descr", False, self.config)
             self.assertEqual(ret["state"], "error")
             self.assertEqual(job_id in ret["path"], True)
 
@@ -61,7 +61,7 @@ class TestWorkers(unittest.TestCase):
             mock_download.return_value = True
             mock_job.return_value.id = job_id
             mock_md5sum.return_value = False
-            ret = verify_archive(archive, "my-host", "my-descr", self.config)
+            ret = verify_archive(archive, "my-host", "my-descr", False, self.config)
             self.assertEqual(ret["state"], "error")
             self.assertEqual(archive in ret["path"], True)
             mock_cleanup.assert_not_called()
@@ -76,9 +76,14 @@ class TestWorkers(unittest.TestCase):
             mock_download.return_value = True
             mock_job.return_value.id = job_id
             mock_md5sum.return_value = True
-            ret = verify_archive(archive, "my-host", "my-descr", self.config)
+            ret = verify_archive(archive, "my-host", "my-descr", False, self.config)
             self.assertEqual(ret["state"], "done")
             self.assertEqual(archive in ret["path"] and job_id in ret["path"], True)
             mock_cleanup.assert_called()
-            
 
+            # assert cleanup is not done if downloaded archive should be kept
+            mock_cleanup.reset_mock()
+            ret = verify_archive(archive, "my-host", "my-descr", True, self.config)
+            self.assertEqual(ret["state"], "done")
+            self.assertEqual(archive in ret["path"] and job_id in ret["path"], True)
+            mock_cleanup.assert_not_called()
