@@ -111,12 +111,13 @@ class PdcClient:
                 codes.append(match)
 
         unique_codes = set(sorted(codes))
-        log_fn(f"ANS codes found in DSMC output: {', '.join(unique_codes)}")
+        if unique_codes:
+            log_fn(f"ANS codes found in DSMC output: {', '.join(unique_codes)}")
 
-        # if we only have whitelisted warnings, change the return code to 0 instead
-        if unique_codes and not unique_codes.difference(set(whitelist)):
-            log.info("Only whitelisted DSMC ANS code(s) were encountered. Everything is OK.")
-            return True
+            # if we only have whitelisted warnings, change the return code to 0 instead
+            if not unique_codes.difference(set(whitelist)):
+                log.info("Only whitelisted DSMC ANS code(s) were encountered. Everything is OK.")
+                return True
 
         log.error(
             f"Non-whitelisted DSMC ANS code(s) encountered: "
