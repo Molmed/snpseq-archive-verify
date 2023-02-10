@@ -29,7 +29,7 @@ is used below with bash on a Linux system.
 
     python3 -m venv --upgrade-deps .venv
     source .venv/bin/activate
-    pip install -r requirements/prod .
+    pip install .
 
 Running the service
 -------------------
@@ -71,7 +71,7 @@ Running tests
 -------------
 
     source .venv/bin/activate
-    pip install -e -r requirements/dev .
+    pip install -e .[test]
     nosetests tests/
 
 REST endpoints
@@ -80,6 +80,10 @@ REST endpoints
 Enqueue a verification job of a specific archive: 
     
     curl -i -X "POST" -d '{"host": "my-host", "description": "my-descr", "archive": "my_001XBC_archive"}' http://localhost:8989/api/1.0/verify
+
+Enqueue a download job of a specific archive:
+
+    curl -i -X "POST" -d '{"host": "my-host", "description": "my-descr", "archive": "my_001XBC_archive"}' http://localhost:8989/api/1.0/download
 
 Check the current status of an enqueued job: 
 
