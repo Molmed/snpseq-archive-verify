@@ -9,6 +9,7 @@ from archive_verify.workers import verify_archive
 
 log = logging.getLogger(__name__)
 
+
 async def verify(request):
     """
     Handler accepts a POST call with JSON parameters in the body. Upon a request it will 
@@ -21,6 +22,8 @@ async def verify(request):
     :return JSON containing job id and link which we can poll for current job status
     """
     body = await request.json()
+    endpoint = request.match_info["endpoint"]
+    keep_download = (endpoint == "download")
     host = body["host"]
     archive = body["archive"]
     description = body["description"]
@@ -38,19 +41,30 @@ async def verify(request):
     # the jobs and their results will be kept in the Redis queue. By default our 
     # config e.g. setups the queue to keep the job results indefinately, 
     # therefore they we will have to remove them ourselves afterwards. 
-    job = q.enqueue_call(verify_archive, 
-                        args=(archive, archive_path, description, request.app["config"]),
-                        timeout=request.app["config"]["job_timeout"],
-                        result_ttl=request.app["config"]["job_result_ttl"],
-                        ttl=request.app["config"]["job_ttl"])
+    job = q.enqueue_call(verify_archive,
+                         args=(
+                            archive,
+                            archive_path,
+                            description,
+                            keep_download,
+                            request.app["config"]),
+                         timeout=request.app["config"]["job_timeout"],
+                         result_ttl=request.app["config"]["job_result_ttl"],
+                         ttl=request.app["config"]["job_ttl"])
 
     url = request.url
     url_base = request.app["config"]["base_url"]
 
     status_end_point = "{0}://{1}:{2}{3}/status/{4}".format(url.scheme, url.host, url.port, url_base, job.id)
-    response = { "status": "pending", "job_id": job.id, "link": status_end_point, "path": archive_path }
+    response = {
+        "status": "pending",
+        "job_id": job.id,
+        "link": status_end_point,
+        "path": archive_path,
+        "action": endpoint}
     
     return web.json_response(response)
+
 
 async def status(request):
     """

@@ -27,7 +27,13 @@ class HandlerTestCase(AioHTTPTestCase):
         request = await self.client.request("GET", "/")
         assert request.status == 404
         text = await request.text()
-        assert "not found"  in text.lower()
+        assert "not found" in text.lower()
+
+    async def test_unknown(self):
+        request = await self.client.request("GET", "/unknown_route")
+        assert request.status == 404
+        text = await request.text()
+        assert "not found" in text.lower()
 
     async def test_basic_verify(self):
         url = self.BASE_URL + "/verify"
@@ -36,6 +42,17 @@ class HandlerTestCase(AioHTTPTestCase):
         assert request.status == 200
         resp = await request.json()
         assert resp["status"] == "pending"
+        assert resp["action"] == "verify"
+        assert resp["job_id"] != ""
+
+    async def test_basic_download(self):
+        url = self.BASE_URL + "/download"
+        payload = {"host": "testbox", "archive": "test_archive", "description": "test-description"}
+        request = await self.client.request("POST", url, json=payload)
+        assert request.status == 200
+        resp = await request.json()
+        assert resp["status"] == "pending"
+        assert resp["action"] == "download"
         assert resp["job_id"] != ""
 
     async def test_basic_status_wrong_id(self):
@@ -44,5 +61,3 @@ class HandlerTestCase(AioHTTPTestCase):
         assert request.status == 400
         resp = await request.json()
         assert "no such job foobar found" in resp["msg"].lower()
-
-

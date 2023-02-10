@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 
 def setup_routes(app):
-    app.router.add_post(app["config"]["base_url"] + "/verify", handlers.verify)
+    app.router.add_post(app["config"]["base_url"] + r"/{endpoint:(verify|download)}", handlers.verify)
     app.router.add_get(app["config"]["base_url"] + "/status/{job_id}", handlers.status)
 
 
