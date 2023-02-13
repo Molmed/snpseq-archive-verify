@@ -51,6 +51,7 @@ def start():
     log.info("Starting archive-verify-ws on {}...".format(conf["port"]))
     app = web.Application()
     app['config'] = conf
+    app.cleanup_ctx.append(handlers.redis_context)
     setup_routes(app)
     web.run_app(app, port=conf["port"])
 

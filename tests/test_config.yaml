@@ -6,6 +6,7 @@ dsmc_log_dir: "logs/"
 job_timeout: "48h"      # maximum run-time for a job
 job_ttl: "72h"          # maximum time to keep a job in the queue
 job_result_ttl: "-1"    # maximum time to keep job result; -1 never expires
+async_redis: False
 
 # Whitelisted DSMC warnings.
 #

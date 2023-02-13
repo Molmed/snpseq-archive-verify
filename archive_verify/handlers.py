@@ -2,10 +2,10 @@ import logging
 import os
 
 from aiohttp import web
-import archive_verify.redis_client as redis_client
 from rq import Queue
 
 from archive_verify.workers import verify_archive
+import archive_verify.redis_client as redis_client
 
 log = logging.getLogger(__name__)
 
@@ -33,14 +33,13 @@ async def verify(request):
     # use a supplied path if available, otherwise construct it from the src_root and archive
     archive_path = path or os.path.join(src_root, archive)
 
-    redis_conn = redis_client.get_redis_instance()
-    q = Queue(connection=redis_conn)
+    q = request.app['redis_q']
 
     # Enqueue the verify_archive function with the user supplied input parameters.
-    # Note that the TTL and timeout parameters are important for e.g. how long 
-    # the jobs and their results will be kept in the Redis queue. By default our 
-    # config e.g. setups the queue to keep the job results indefinately, 
-    # therefore they we will have to remove them ourselves afterwards. 
+    # Note that the TTL and timeout parameters are important for e.g. how long
+    # the jobs and their results will be kept in the Redis queue. By default our
+    # config e.g. setups the queue to keep the job results indefinately,
+    # therefore they we will have to remove them ourselves afterwards.
     job = q.enqueue_call(verify_archive,
                          args=(
                             archive,
@@ -62,7 +61,7 @@ async def verify(request):
         "link": status_end_point,
         "path": archive_path,
         "action": endpoint}
-    
+
     return web.json_response(response)
 
 
@@ -76,34 +75,47 @@ async def status(request):
     """
     job_id = str(request.match_info['job_id'])
 
-    redis_conn = redis_client.get_redis_instance()
-    q = Queue(connection=redis_conn)
+    q = request.app['redis_q']
     job = q.fetch_job(job_id)
 
     if job:
         if job.is_started:
-            payload = {"state": "started", "msg": "Job {} is currently running.".format(job_id)}
+            payload = {
+                "state": "started",
+                "msg": f"Job {job_id} is currently running."}
             code = 200
-        elif job.is_finished:
+        elif job.is_finished or job.is_failed:
             result = job.result
 
-            if result and result["state"] == "done": 
-                payload =  {"state": "done", "msg": "Job {} has returned with result: {}".format(job_id, job.result)}
+            if result["state"] == "done":
+                payload = {
+                    "state": result["state"],
+                    "msg": f"Job {job_id} has returned with result: {result['msg']}"}
                 code = 200
-            else: 
-                payload =  {"state": "error", "msg": "Job {} has returned with result: {}".format(job_id, job.result), "debug": job.exc_info}
+            else:
+                payload = {
+                    "state": result["state"],
+                    "msg": f"Job {job_id} has returned with result: {result['msg']}",
+                    "debug": job.exc_info if job.exc_info else result}
                 code = 500
 
             job.delete()
-        elif job.is_failed:
-            payload = {"state": "error", "msg": "Job {} failed with error: {}".format(job_id, job.exc_info)}
-            job.delete()
-            code = 500
         else:
-            payload = {"state": "pending", "msg": "Job {} has not started yet.".format(job_id)}
+            payload = {
+                "state": job.get_status(),
+                "msg": f"Job {job_id} is {job.get_status()}"}
             code = 200
     else:
-        payload = {"state": "error", "msg": "No such job {} found!".format(job_id)}
+        payload = {
+            "state": "error",
+            "msg": f"No such job {job_id} found!"}
         code = 400
 
     return web.json_response(payload, status=code)
+
+
+async def redis_context(app):
+    app["redis_q"] = Queue(
+        connection=redis_client.get_redis_instance(),
+        is_async=app["config"].get("async_redis", True))
+    yield
