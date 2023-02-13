@@ -66,7 +66,12 @@ class PdcClient:
         cmd = f"export DSM_LOG={self.dsmc_log_dir} && " \
               f"dsmc retr {self.archive_pdc_path}/ {self.dest()}/ {self.dsmc_args()}"
 
-        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        p = subprocess.Popen(
+            cmd,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True)
 
         dsmc_output, _ = p.communicate()
         dsmc_exit_code = p.returncode
