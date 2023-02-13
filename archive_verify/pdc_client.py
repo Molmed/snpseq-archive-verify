@@ -66,7 +66,12 @@ class PdcClient:
         cmd = f"export DSM_LOG={self.dsmc_log_dir} && " \
               f"dsmc retr {self.archive_pdc_path}/ {self.dest()}/ {self.dsmc_args()}"
 
-        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        p = subprocess.Popen(
+            cmd,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True)
 
         dsmc_output, _ = p.communicate()
         dsmc_exit_code = p.returncode
@@ -95,39 +100,34 @@ class PdcClient:
         :param whitelist: A list of whitelisted warnings
         :returns True if only whitelisted warnings was encountered in the output, otherwise False
         """
-        log.info("DSMC process returned an error!")
 
         # DSMC sets return code to 8 when a warning was encountered.
-        if exit_code == 8:
-            log.info("DSMC process actually returned a warning.")
+        log_fn = log.warning if exit_code == 8 else log.error
+        log_fn(f"DSMC process returned a{' warning' if exit_code == 8 else 'n error'}!")
 
-            output = output.splitlines()
+        # parse the DSMC output and extract error/warning codes and messages
+        codes = []
+        for line in output.splitlines():
+            if line.startswith("ANS"):
+                log_fn(line)
 
-            # Search through the DSMC log and see if we only have
-            # whitelisted warnings. If that is the case, change the
-            # return code to 0 instead. Otherwise keep the error state.
-            warnings = []
+            matches = re.findall(r'ANS[0-9]+W', line)
+            for match in matches:
+                codes.append(match)
 
-            for line in output:
-                matches = re.findall(r'ANS[0-9]+W', line)
+        unique_codes = set(sorted(codes))
+        if unique_codes:
+            log_fn(f"ANS codes found in DSMC output: {', '.join(unique_codes)}")
 
-                for match in matches:
-                    warnings.append(match)
+            # if we only have whitelisted warnings, change the return code to 0 instead
+            if not unique_codes.difference(set(whitelist)):
+                log.info("Only whitelisted DSMC ANS code(s) were encountered. Everything is OK.")
+                return True
 
-            log.info("Warnings found in DSMC output: {}".format(set(warnings)))
-
-            for warning in warnings:
-                if warning not in whitelist:
-                    log.error(
-                        f"A non-whitelisted DSMC warning was encountered. "
-                        f"Reporting it as an error! ('{warning}')")
-                    return False
-
-            log.info("Only whitelisted DSMC warnings were encountered. Everything is OK.")
-            return True
-        else:
-            log.error("An uncaught DSMC error code was encountered!")
-            return False
+        log.error(
+            f"Non-whitelisted DSMC ANS code(s) encountered: "
+            f"{', '.join(unique_codes.difference(set(whitelist)))}")
+        return False
 
 
 class MockPdcClient(PdcClient):

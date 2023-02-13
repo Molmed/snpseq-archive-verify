@@ -89,6 +89,3 @@ class TestPdcClient(unittest.TestCase):
                    f"-extra_key_1='extra_val_1'"
         obs_args = client.dsmc_args()
         self.assertEqual(obs_args.split(" "), exp_args.split(" "))
-
-
-
