@@ -82,16 +82,23 @@ async def status(request):
 
     if job:
         if job.is_started:
-            payload = {"state": "started", "msg": "Job {} is currently running.".format(job_id)}
+            payload = {
+                "state": "started",
+                "msg": f"Job {job_id} is currently running."}
             code = 200
         elif job.is_finished:
-            result = job.result
+            result = job.latest_result()
 
-            if result and result["state"] == "done": 
-                payload =  {"state": "done", "msg": "Job {} has returned with result: {}".format(job_id, job.result)}
+            if result and result.type == result.Type.SUCCESSFUL:
+                payload = {
+                    "state": "done",
+                    "msg": f"Job {job_id} has returned with result: {result.return_value}"}
                 code = 200
-            else: 
-                payload =  {"state": "error", "msg": "Job {} has returned with result: {}".format(job_id, job.result), "debug": job.exc_info}
+            else:
+                payload = {
+                    "state": "error",
+                    "msg": f"Job {job_id} has returned with result: {result.exc_string}",
+                    "debug": result.exc_string}
                 code = 500
 
             job.delete()
@@ -100,10 +107,14 @@ async def status(request):
             job.delete()
             code = 500
         else:
-            payload = {"state": "pending", "msg": "Job {} has not started yet.".format(job_id)}
+            payload = {
+                "state": job.get_status(),
+                "msg": f"Job {job_id} is {job.get_status()}"}
             code = 200
     else:
-        payload = {"state": "error", "msg": "No such job {} found!".format(job_id)}
+        payload = {
+            "state": "error",
+            "msg": f"No such job {job_id} found!"}
         code = 400
 
     return web.json_response(payload, status=code)

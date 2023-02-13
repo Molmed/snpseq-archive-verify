@@ -111,7 +111,7 @@ class PdcClient:
             if line.startswith("ANS"):
                 log_fn(line)
 
-            matches = re.findall(r'ANS[0-9]+W', line)
+            matches = re.findall(r'ANS[0-9]+[EW]', line)
             for match in matches:
                 codes.append(match)
 

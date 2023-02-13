@@ -18,7 +18,7 @@ class TestPdcClient(unittest.TestCase):
     def test_dsmc_whitelist_ok(self):
         exit_code = 8
         whitelist = ["ANS2250W", "ANS5000W"]
-        output = "TEST\nOUTPUT\nWARNING****************\nSEE ANS2250W FOR MORE INFO\nANS2250E\n"
+        output = "TEST\nOUTPUT\nWARNING****************\nSEE ANS2250W FOR MORE INFO\nANS5000W\n"
         ret = PdcClient._parse_dsmc_return_code(exit_code, output, whitelist)
         self.assertEqual(ret, True)
 
