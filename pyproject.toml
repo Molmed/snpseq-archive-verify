@@ -15,7 +15,7 @@ keywords = ["bioinformatics"]
 description = "Micro-service for downloading and verifying archives with DSMC"
 readme = "README.md"
 license = {file = "LICENSE"}
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
