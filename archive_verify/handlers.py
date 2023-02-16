@@ -76,7 +76,6 @@ async def status(request):
     job_id = str(request.match_info['job_id'])
 
     q = request.app['redis_q']
-
     job = q.fetch_job(job_id)
 
     if job:
