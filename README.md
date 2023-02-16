@@ -2,7 +2,7 @@ SNPSEQ Archive Verify
 ==================
 
 A self contained (aiohttp) REST service that helps verify uploaded SNP&SEQ archives by first downloading the archive 
-PDC, and then compare the MD5 sums for all associated files. The downloaded files are deleted on successful 
+from PDC, and then compare the MD5 sums for all associated files. The downloaded files are deleted on successful 
 verification, and retained if any error occurs.
 
 The service is composed of 3 components which must all be running and the system must be set up to allow the services 
@@ -60,11 +60,13 @@ To use this method:
 *Note that the archive will be deleted from verify_root_dir on successful verification*
 
 #### Naming Conventions for Mock Download ####
-Note that when an archive is downloaded from PDC using snpseq-archive-verify, the downloaded directory is formatted with the name of the archive plus the RQ job id, like so:
+Note that when an archive is downloaded from PDC using snpseq-archive-verify, the downloaded directory is formatted 
+with the name of the archive plus the RQ job id, like so:
 
     {verify_root_dir}/{archive_name}_{rq_job_id}
 
-When mocking downloading, we search verify_root_dir for archive_name and use the first directory found, ignoring the rq_job_id.
+When mocking downloading, we search verify_root_dir for archive_name and use the first directory found, ignoring the 
+rq_job_id.
 
 
 Running tests
