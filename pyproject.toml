@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["archive_verify"]
+
+[project]
+name = "archive-verify"
+version = "1.1.0"
+authors = [
+    {name = "SNP&SEQ Technology Platform, Uppsala University", email = "seq@medsci.uu.se" },
+]
+keywords = ["bioinformatics"]
+description = "Micro-service for downloading and verifying archives with DSMC"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: System :: Archiving"
+]
+dependencies = [
+    "aiohttp",
+    "pyyaml",
+    "redis",
+    "rq"
+]
+
+[project.optional-dependencies]
+test = [
+    "nose",
+    "fakeredis"]
+
+[project.scripts]
+archive-verify-ws = "archive_verify.app:start"
+
+[project.urls]
+homepage = "https://github.com/Molmed/snpseq-archive-verify"

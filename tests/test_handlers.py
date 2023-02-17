@@ -1,6 +1,6 @@
 import yaml
 
-from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
+from aiohttp.test_utils import AioHTTPTestCase
 from aiohttp import web
 
 import archive_verify.app as app_setup
@@ -23,14 +23,12 @@ class HandlerTestCase(AioHTTPTestCase):
         app_setup.setup_routes(app)
         return app
 
-    @unittest_run_loop
-    async def test_root(self): 
+    async def test_root(self):
         request = await self.client.request("GET", "/")
         assert request.status == 404
         text = await request.text()
         assert "not found"  in text.lower()
 
-    @unittest_run_loop
     async def test_basic_verify(self):
         url = self.BASE_URL + "/verify"
         payload = {"host": "testbox", "archive": "test_archive", "description": "test-description"}
@@ -40,7 +38,6 @@ class HandlerTestCase(AioHTTPTestCase):
         assert resp["status"] == "pending"
         assert resp["job_id"] != ""
 
-    @unittest_run_loop
     async def test_basic_status_wrong_id(self):
         url = self.BASE_URL + "/status/foobar"
         request = await self.client.request("GET", url)
