@@ -1,6 +1,6 @@
 import yaml
 
-from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
+from aiohttp.test_utils import AioHTTPTestCase
 from aiohttp import web
 
 import archive_verify.app as app_setup
@@ -46,7 +46,6 @@ class HandlerTestCase(AioHTTPTestCase):
         text = await request.text()
         assert "not found" in text.lower()
 
-    @unittest_run_loop
     async def test_basic_verify(self):
         request = await self.post_queued_request()
         assert request.status == 200
@@ -63,7 +62,6 @@ class HandlerTestCase(AioHTTPTestCase):
         assert resp["action"] == "download"
         assert resp["job_id"] != ""
 
-    @unittest_run_loop
     async def test_basic_status_wrong_id(self):
         url = self.BASE_URL + "/status/foobar"
         request = await self.client.request("GET", url)

@@ -1,6 +1,6 @@
 import copy
-import mock
 import unittest
+import unittest.mock as mock
 import yaml
 
 from archive_verify.workers import compare_md5sum, pdc_client_factory, verify_archive
