@@ -87,10 +87,8 @@ class HandlerTestCase(AioHTTPTestCase):
             assert resp["state"] == "done"
 
     async def test_basic_status_failed_job(self):
-        with mock.patch.object(archive_verify.pdc_client.PdcClient, "download") as download_mock, \
-                mock.patch("archive_verify.workers.compare_md5sum") as md5_mock:
+        with mock.patch.object(archive_verify.pdc_client.PdcClient, "download") as download_mock:
             download_mock.return_value = False
-            md5_mock.return_value = True
 
             request = await self.post_queued_request(endpoint="download")
             assert request.status == 200

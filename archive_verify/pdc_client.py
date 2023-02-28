@@ -120,7 +120,7 @@ class PdcClient:
             log_fn(f"ANS codes found in DSMC output: {', '.join(unique_codes)}")
 
             # if we only have whitelisted warnings, change the return code to 0 instead
-            if not unique_codes.difference(set(whitelist)):
+            if unique_codes.issubset(set(whitelist)):
                 log.info("Only whitelisted DSMC ANS code(s) were encountered. Everything is OK.")
                 return True
 
