@@ -18,7 +18,7 @@ class TestPdcClient(unittest.TestCase):
     def test_dsmc_whitelist_ok(self):
         exit_code = 8
         whitelist = ["ANS2250W", "ANS5000W"]
-        output = "TEST\nOUTPUT\nWARNING****************\nSEE ANS2250W FOR MORE INFO\nANS2250E\n"
+        output = "TEST\nOUTPUT\nWARNING****************\nSEE ANS2250W FOR MORE INFO\nANS5000W\n"
         ret = PdcClient._parse_dsmc_return_code(exit_code, output, whitelist)
         self.assertEqual(ret, True)
 
@@ -62,3 +62,30 @@ class TestPdcClient(unittest.TestCase):
         with mock.patch('shutil.rmtree') as mock_rmtree:
             self.getPdcClient().cleanup()
             mock_rmtree.assert_called_with("data/verify/archive_1234")
+
+    def test_dsmc_args(self):
+        # ensure the default arguments are returned properly
+        client = self.getPdcClient()
+        base_args = f"-subdir='yes' -description='{client.archive_pdc_description}'"
+        obs_args = client.dsmc_args()
+        self.assertEqual(obs_args.split(" "), base_args.split(" "))
+
+        # ensure extra arguments are added properly
+        self.config["dsmc_extra_args"] = {
+            "extra_key_1": "extra_val_1",
+            "extra_key_2": "extra_val_2",
+            "extra_key_3": None}
+        client = self.getPdcClient()
+        exp_args = f"{base_args} -extra_key_1='extra_val_1' -extra_key_2='extra_val_2' -extra_key_3"
+        obs_args = client.dsmc_args()
+        self.assertEqual(obs_args.split(" "), exp_args.split(" "))
+
+        # ensure extra arguments override default arguments
+        self.config["dsmc_extra_args"] = {
+            "extra_key_1": "extra_val_1",
+            "subdir": "no"}
+        client = self.getPdcClient()
+        exp_args = f"-subdir='no' -description='{client.archive_pdc_description}' " \
+                   f"-extra_key_1='extra_val_1'"
+        obs_args = client.dsmc_args()
+        self.assertEqual(obs_args.split(" "), exp_args.split(" "))

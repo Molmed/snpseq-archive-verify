@@ -51,7 +51,12 @@ def configure_log(dsmc_log_dir, archive_pdc_description):
     log.addHandler(fh)
 
 
-def verify_archive(archive_name, archive_pdc_path, archive_pdc_description, config):
+def verify_archive(
+        archive_name,
+        archive_pdc_path,
+        archive_pdc_description,
+        keep_downloaded_archive,
+        config):
     """
     Our main worker function. This will be put into the RQ/Redis queue when the /verify endpoint gets called. 
     Downloads the specified archive from PDC and then verifies the MD5 sums. 
@@ -59,6 +64,8 @@ def verify_archive(archive_name, archive_pdc_path, archive_pdc_description, conf
     :param archive_name: The name of the archive we shall download
     :param archive_pdc_path: The path in PDC TSM to the archive that we want to download
     :param archive_pdc_description: The unique description that was used when uploading the archive to PDC
+    :param keep_downloaded_archive: If True, the downloaded archive will not be removed from local
+    storage
     :param config: A dict containing the apps configuration
     :returns A JSON with the result that will be kept in the Redis queue
     """
@@ -70,13 +77,22 @@ def verify_archive(archive_name, archive_pdc_path, archive_pdc_description, conf
     log.debug(f"Using PDC Client of type: {pdc_class.__name__}")
 
     job_id = rq.get_current_job().id
-    pdc_client = pdc_class(archive_name, archive_pdc_path, archive_pdc_description, job_id, config)
+    pdc_client = pdc_class(
+        archive_name,
+        archive_pdc_path,
+        archive_pdc_description,
+        job_id,
+        config)
     dest = pdc_client.dest()
     download_ok = pdc_client.download()
 
     if not download_ok:
         log.debug("Download of {} failed.".format(archive_name))
-        return {"state": "error", "msg": "failed to properly download archive from pdc", "path": dest}
+        return {
+            "state": "error",
+            "msg": "failed to properly download archive from pdc",
+            "path": dest
+        }
     else:
         log.debug("Verifying {}...".format(archive_name))
         archive = pdc_client.downloaded_archive_path()
@@ -85,8 +101,17 @@ def verify_archive(archive_name, archive_pdc_path, archive_pdc_description, conf
 
         if verified_ok:
             log.info("Verify of {} succeeded.".format(archive))
-            pdc_client.cleanup()
-            return {"state": "done", "path": output_file, "msg": "Successfully verified archive md5sums."}
+            if not keep_downloaded_archive:
+                pdc_client.cleanup()
+            return {
+                "state": "done",
+                "path": output_file,
+                "msg": "Successfully verified archive md5sums."
+            }
         else:
             log.info("Verify of {} failed.".format(archive))
-            return {"state": "error", "path": output_file, "msg": "Failed to verify archive md5sums."}
+            return {
+                "state": "error",
+                "path": output_file,
+                "msg": "Failed to verify archive md5sums."
+            }
