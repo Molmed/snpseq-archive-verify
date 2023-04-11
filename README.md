@@ -123,30 +123,48 @@ there are two folders that can be used for testing with the mock client, `test_1
     # enque a download job of the test archive available in the container
     curl \
       -X "POST" \
-      -d '{\
-        "host": "my-host", \
-        "description": "my-descr", \
-        "archive": "test_1_arcive"\
-        }' \
+      -d '{"host": "test_host", "description": "my-descr", "archive": "test_1_archive"}' \
       http://localhost:9898/api/1.0/download
+
+      # {
+      #   "status": "pending",
+      #   "job_id": "d7a26f2e-d410-4a9b-a308-973821d0a021",
+      #   "link": "http://localhost:9898/api/1.0/status/d7a26f2e-d410-4a9b-a308-973821d0a021",
+      #   "path": "data/test_host/runfolders/test_1_archive",
+      #   "action": "download"
+      # }
 
     # check the status of the download job
     curl \
-      http://localhost:9898/api/1.0/status/<job-uuid-returned-from-verify-endpoint>
+      http://localhost:9898/api/1.0/status/d7a26f2e-d410-4a9b-a308-973821d0a021
+
+      # {
+      #   "state": "done",
+      #   "msg": "Job d7a26f2e-d410-4a9b-a308-973821d0a021 has returned with result: Successfully verified archive md5sums."
+      # }
 
     # enque a verify job of the test archive available in the container, emulating a call to the service on Uppmax
     curl \
       -X "POST" \
-      -d '{\
-        "host": "my-host", \
-        "description": "my-descr", \
-        "archive": "test_2_arcive"\
-        }' \
+      -d '{"host": "test_host", "description": "my-descr", "archive": "test_2_archive"}' \
       http://localhost:9899/verify/api/1.0/verify
+
+      # {
+      #   "status": "pending",
+      #   "job_id": "0124bdcb-7f31-4402-9251-ae766306ad49",
+      #   "link": "http://localhost:9899/api/1.0/status/0124bdcb-7f31-4402-9251-ae766306ad49",
+      #   "path": "data/test_host/runfolders/test_2_archive",
+      #   "action": "verify"
+      # }
 
     # check the status of the download job
     curl \
-      http://localhost:9899/verify/api/1.0/status/<job-uuid-returned-from-verify-endpoint>
+      http://localhost:9899/verify/api/1.0/status/0124bdcb-7f31-4402-9251-ae766306ad49
+
+      # {
+      #   "state": "done",
+      #   "msg": "Job 0124bdcb-7f31-4402-9251-ae766306ad49 has returned with result: Successfully verified archive md5sums."
+      # }
 
 The docker container can be stopped and removed:
 
