@@ -1,0 +1,19 @@
+#! /bin/bash
+
+set -o errexit
+
+# build docker container
+docker build \
+  -t archive-verify:latest \
+  -f docker/Dockerfile \
+  .
+
+# start the container and store the container hash
+ID="$(docker run \
+  -d \
+  -p 127.0.0.1:9898:9898 \
+  -p 127.0.0.1:9899:9899 \
+  archive-verify:latest)"
+
+# write the container hash to a file
+echo "$ID" > docker/id.txt

@@ -28,4 +28,6 @@ RUN \
   md5sum test_2_data > checksums_prior_to_pdc.md5 && \
   cd ../../../..
 
+EXPOSE 9898 9899
+
 CMD [ "docker/start.sh" ]
