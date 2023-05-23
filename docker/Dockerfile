@@ -8,6 +8,7 @@ RUN \
   apt-get update && \
   apt-get install -y git redis gcc nginx nano && \
   cp docker/nginx.conf /etc/nginx/nginx.conf && \
+  rm -rf .venv && \
   python3 -m venv --upgrade-deps .venv && \
   .venv/bin/pip install -e .[test]
 
