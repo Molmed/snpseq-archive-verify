@@ -4,6 +4,7 @@ import os
 from aiohttp import web
 from rq import Queue
 
+import archive_verify
 from archive_verify.workers import verify_archive
 import archive_verify.redis_client as redis_client
 
@@ -56,7 +57,7 @@ async def verify(request):
 
     status_end_point = "{0}://{1}:{2}{3}/status/{4}".format(url.scheme, url.host, url.port, url_base, job.id)
     response = {
-        "status": "pending",
+        "status": archive_verify.REDIS_STATES.get(job.get_status(), "none"),
         "job_id": job.id,
         "link": status_end_point,
         "path": archive_path,
@@ -78,40 +79,49 @@ async def status(request):
     q = request.app['redis_q']
     job = q.fetch_job(job_id)
 
-    if job:
-        if job.is_started:
-            payload = {
-                "state": "started",
-                "msg": f"Job {job_id} is currently running."}
-            code = 200
-        elif job.is_finished or job.is_failed:
-            result = job.result
+    if job is None:
+        return web.json_response(
+            {
+                "state": archive_verify.REDIS_STATES["failed"],
+                "msg": f"No such job {job_id} found!"
+            },
+            status=400
+        )
 
-            if result["state"] == "done":
-                payload = {
-                    "state": result["state"],
-                    "msg": f"Job {job_id} has returned with result: {result['msg']}"}
-                code = 200
-            else:
-                payload = {
-                    "state": result["state"],
-                    "msg": f"Job {job_id} has returned with result: {result['msg']}",
-                    "debug": job.exc_info if job.exc_info else result}
-                code = 500
+    job_state = archive_verify.REDIS_STATES.get(
+        job.get_status(),
+        "none")
+    code = 200
+    msg = None
+    debug = None
 
-            job.delete()
-        else:
-            payload = {
-                "state": job.get_status(),
-                "msg": f"Job {job_id} is {job.get_status()}"}
-            code = 200
+    if job.is_finished or job.is_failed:
+        # this is the dict returned by the worker function
+        result = job.result
+        job_state = result["state"]
+        msg = f"Job {job_id} has returned with result: {result['msg']}"
+
+        if job_state != "done":
+            debug = job.exc_info if job.exc_info else result
+            code = 500
+
+        job.delete()
+    elif job.is_started:
+        msg = f"Job {job_id} is currently running."
     else:
-        payload = {
-            "state": "error",
-            "msg": f"No such job {job_id} found!"}
-        code = 400
+        msg = f"Job {job_id} is {job.get_status()}"
 
-    return web.json_response(payload, status=code)
+    payload = {
+        "state": job_state,
+        "msg": msg or "",
+    }
+    if debug:
+        payload["debug"] = debug
+
+    return web.json_response(
+        payload,
+        status=code
+    )
 
 
 async def redis_context(app):
