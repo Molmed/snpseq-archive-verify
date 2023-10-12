@@ -55,9 +55,16 @@ async def verify(request):
     url = request.url
     url_base = request.app["config"]["base_url"]
 
-    status_end_point = "{0}://{1}:{2}{3}/status/{4}".format(url.scheme, url.host, url.port, url_base, job.id)
+    status_end_point = "{0}://{1}:{2}{3}/status/{4}".format(
+        url.scheme,
+        url.host,
+        url.port,
+        url_base,
+        job.id)
     response = {
-        "status": archive_verify.REDIS_STATES.get(job.get_status(), "none"),
+        "status": archive_verify.REDIS_STATES.get(
+            job.get_status(),
+            archive_verify.State.NONE),
         "job_id": job.id,
         "link": status_end_point,
         "path": archive_path,
@@ -82,7 +89,7 @@ async def status(request):
     if job is None:
         return web.json_response(
             {
-                "state": archive_verify.REDIS_STATES["failed"],
+                "state": archive_verify.State.ERROR,
                 "msg": f"No such job {job_id} found!"
             },
             status=400
@@ -90,33 +97,31 @@ async def status(request):
 
     job_state = archive_verify.REDIS_STATES.get(
         job.get_status(),
-        "none")
+        archive_verify.State.NONE)
+    payload = {
+        "state": job_state
+    }
     code = 200
-    msg = None
-    debug = None
 
-    if job.is_finished or job.is_failed:
+    if job_state in [
+        archive_verify.State.DONE,
+        archive_verify.State.ERROR
+    ]:
         # this is the dict returned by the worker function
-        result = job.result
-        job_state = result["state"]
-        msg = f"Job {job_id} has returned with result: {result['msg']}"
+        job_result = job.result
+        job_result_state = job_result["state"]
+        payload["state"] = job_result_state
+        payload["msg"] = f"Job {job_id} has returned with result: {job_result['msg']}"
 
-        if job_state != "done":
-            debug = job.exc_info if job.exc_info else result
+        if job_result_state == archive_verify.State.ERROR:
+            payload["debug"] = job.exc_info if job.exc_info else job_result
             code = 500
 
         job.delete()
-    elif job.is_started:
-        msg = f"Job {job_id} is currently running."
+    elif job_state == archive_verify.State.STARTED:
+        payload["msg"] = f"Job {job_id} is currently running."
     else:
-        msg = f"Job {job_id} is {job.get_status()}"
-
-    payload = {
-        "state": job_state,
-        "msg": msg or "",
-    }
-    if debug:
-        payload["debug"] = debug
+        payload["msg"] = f"Job {job_id} is {job_state}"
 
     return web.json_response(
         payload,

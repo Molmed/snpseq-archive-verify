@@ -25,6 +25,7 @@ classifiers = [
 ]
 dependencies = [
     "aiohttp",
+    "arteria",
     "pyyaml",
     "redis",
     "rq"
