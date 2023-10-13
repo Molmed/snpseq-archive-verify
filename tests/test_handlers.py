@@ -50,7 +50,7 @@ class HandlerTestCase(AioHTTPTestCase):
         request = await self.post_queued_request()
         assert request.status == 200
         resp = await request.json()
-        assert resp["status"] == "pending"
+        assert resp["status"] == "done"
         assert resp["action"] == "verify"
         assert resp["job_id"] != ""
 
@@ -58,7 +58,7 @@ class HandlerTestCase(AioHTTPTestCase):
         request = await self.post_queued_request(endpoint="download")
         assert request.status == 200
         resp = await request.json()
-        assert resp["status"] == "pending"
+        assert resp["status"] == "done"
         assert resp["action"] == "download"
         assert resp["job_id"] != ""
 

@@ -4,6 +4,7 @@ import subprocess
 import os
 import datetime
 
+import archive_verify
 from archive_verify.pdc_client import PdcClient, MockPdcClient
 
 log = logging.getLogger(__name__)
@@ -89,7 +90,7 @@ def verify_archive(
     if not download_ok:
         log.debug("Download of {} failed.".format(archive_name))
         return {
-            "state": "error",
+            "state": archive_verify.State.ERROR,
             "msg": "failed to properly download archive from pdc",
             "path": dest
         }
@@ -104,14 +105,14 @@ def verify_archive(
             if not keep_downloaded_archive:
                 pdc_client.cleanup()
             return {
-                "state": "done",
+                "state": archive_verify.State.DONE,
                 "path": output_file,
                 "msg": "Successfully verified archive md5sums."
             }
         else:
             log.info("Verify of {} failed.".format(archive))
             return {
-                "state": "error",
+                "state": archive_verify.State.ERROR,
                 "path": output_file,
                 "msg": "Failed to verify archive md5sums."
             }
